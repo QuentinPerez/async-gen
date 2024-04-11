@@ -334,7 +334,7 @@ impl<G: AsyncGenerator<Return = ()>> futures_core::Stream for AsyncIter<G> {
 /// fn check_type_1(_: &AsyncGen<impl Future<Output = Return<&'static str>>, i32>) {}
 /// fn check_type_2(_: &impl AsyncGenerator<Yield = i32, Return = &'static str>) {}
 /// ```
-pub fn gen<Fut, Y, R>(fut: impl FnOnce(Yield<Y>) -> Fut) -> AsyncGen<Fut, Y>
+pub fn generator<Fut, Y, R>(fut: impl FnOnce(Yield<Y>) -> Fut) -> AsyncGen<Fut, Y>
 where
     Fut: Future<Output = Return<R>>,
 {
@@ -369,7 +369,7 @@ where
 /// # }
 /// ```
 #[macro_export]
-macro_rules! gen {
+macro_rules! generator {
     ($($tt:tt)*) => {
         $crate::__private::gen_inner!(($crate) $($tt)*)
     }

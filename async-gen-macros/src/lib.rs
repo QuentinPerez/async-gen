@@ -13,7 +13,7 @@ pub fn gen_inner(input: TokenStream) -> TokenStream {
     let mut o = TokenStream::new();
     o.extend(crate_path.clone());
     o.push_colon2();
-    o.push_ident("gen");
+    o.push_ident("generator");
 
     o.push_group(Delimiter::Parenthesis, |o| {
         o.push_punct('|');

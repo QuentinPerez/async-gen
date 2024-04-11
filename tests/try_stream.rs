@@ -1,9 +1,9 @@
-use async_gen::{gen, GeneratorState};
+use async_gen::{generator, GeneratorState};
 use std::pin::pin;
 
 #[tokio::test]
 async fn single_err() {
-    let mut s = pin!(gen! {
+    let mut s = pin!(generator! {
         if true {
             Err("hello")?;
         } else {
@@ -16,7 +16,7 @@ async fn single_err() {
 
 #[tokio::test]
 async fn yield_then_err() {
-    let mut s = pin!(gen! {
+    let mut s = pin!(generator! {
         yield "hello";
         Err("world")?;
         Result::<_, &str>::Ok(())

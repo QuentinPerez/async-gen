@@ -1,4 +1,4 @@
-use async_gen::{gen, GeneratorState};
+use async_gen::{generator, GeneratorState};
 use futures_core::Stream;
 use futures_util::stream::StreamExt;
 use std::pin::pin;
@@ -6,7 +6,7 @@ use tokio::sync::mpsc;
 
 #[tokio::test]
 async fn noop_stream() {
-    let mut gen = pin!(gen! {});
+    let mut gen = pin!(generator! {});
     assert_eq!(gen.resume().await, GeneratorState::Complete(()));
 }
 
@@ -15,7 +15,7 @@ async fn empty_stream() {
     let mut ran = false;
     {
         let r = &mut ran;
-        let mut gen = pin!(gen! {
+        let mut gen = pin!(generator! {
             *r = true;
             println!("hello world!");
         });
@@ -26,7 +26,7 @@ async fn empty_stream() {
 
 #[tokio::test]
 async fn yield_single_value() {
-    let mut s = pin!(gen! {
+    let mut s = pin!(generator! {
         yield "hello";
     });
     assert_eq!(s.resume().await, GeneratorState::Yielded("hello"));
@@ -35,7 +35,7 @@ async fn yield_single_value() {
 
 #[tokio::test]
 async fn yield_multi_value() {
-    let mut s = pin!(gen! {
+    let mut s = pin!(generator! {
         yield "hello";
         yield "world";
         yield "dizzy";
@@ -49,7 +49,7 @@ async fn yield_multi_value() {
 #[tokio::test]
 async fn return_stream() {
     fn build_stream() -> impl Stream<Item = i32> {
-        gen! {
+        generator! {
             yield 1;
             yield 2;
             yield 3;
@@ -67,7 +67,7 @@ async fn return_stream() {
 #[tokio::test]
 async fn consume_channel() {
     let (tx, mut rx) = mpsc::channel(10);
-    let mut s = pin!(gen! {
+    let mut s = pin!(generator! {
         while let Some(v) = rx.recv().await {
             yield v;
         }
@@ -86,7 +86,7 @@ async fn borrow_self() {
 
     impl Data {
         fn stream<'a>(&'a self) -> impl Stream<Item = &str> + 'a {
-            gen! {
+            generator! {
                 yield &self.0[..];
             }
         }
@@ -99,8 +99,8 @@ async fn borrow_self() {
 
 #[tokio::test]
 async fn stream_in_stream() {
-    let s = gen! {
-        let mut s = pin!(gen! {
+    let s = generator! {
+        let mut s = pin!(generator! {
             for i in 0..3 {
                 yield i;
             }
@@ -115,7 +115,7 @@ async fn stream_in_stream() {
 
 #[tokio::test]
 async fn yield_non_unpin_value() {
-    let s: Vec<_> = gen! {
+    let s: Vec<_> = generator! {
         for i in 0..3 {
             yield async move { i };
         }
@@ -132,7 +132,7 @@ async fn yield_with_select() {
     use tokio::select;
     async fn do_stuff_async() {}
     async fn more_async_work() {}
-    let s = gen(|mut c| async {
+    let s = generator(|mut c| async {
         select! {
             _ = do_stuff_async() => c.yield_("hey").await,
             _ = more_async_work() => c.yield_("hey").await,
